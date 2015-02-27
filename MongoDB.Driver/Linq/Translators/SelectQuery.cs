@@ -43,6 +43,7 @@ namespace MongoDB.Driver.Linq
         private Func<IEnumerable, object> _elementSelector; // used for First, Last, etc...
         private LambdaExpression _distinct;
         private Expression _lastExpression;
+        private TimeSpan? _maxTime;
 
         // constructors
         /// <summary>
@@ -87,6 +88,14 @@ namespace MongoDB.Driver.Linq
         public int? Skip
         {
             get { return _skip; }
+        }
+
+        /// <summary>
+        /// Gets the TimeSpan that defines the time limit for processing operations on the cursor (or null if not specified).
+        /// </summary>
+        public TimeSpan? MaxTime
+        {
+            get { return _maxTime; }
         }
 
         /// <summary>
@@ -191,6 +200,11 @@ namespace MongoDB.Driver.Linq
                 {
                     throw new NotSupportedException("Index hints must be strings or documents");
                 }
+            }
+
+            if (_maxTime != null)
+            {
+                cursor.SetMaxTime(_maxTime.Value);
             }
 
             var projection = _projection;
@@ -711,6 +725,9 @@ namespace MongoDB.Driver.Linq
                 case "WithIndex":
                     TranslateWithIndex(methodCallExpression);
                     break;
+                case "WithMaxTime":
+                    TranslateWithMaxTime(methodCallExpression);
+                    break;
                 case "Where":
                     TranslateWhere(methodCallExpression);
                     break;
@@ -936,6 +953,41 @@ namespace MongoDB.Driver.Linq
             }
 
             _indexHint = (BsonValue)constantExpression.Value;
+        }
+
+        private void TranslateWithMaxTime(MethodCallExpression methodCallExpression)
+        {
+            if (methodCallExpression.Arguments.Count != 2)
+            {
+                throw new ArgumentOutOfRangeException("methodCallExpression");
+            }
+
+            var method = methodCallExpression.Method;
+
+            if (method.DeclaringType != typeof(LinqToMongo))
+            {
+                var message = string.Format("WithMaxTime method of class {0} is not supported.", BsonUtils.GetFriendlyTypeName(method.DeclaringType));
+                throw new NotSupportedException(message);
+            }
+
+            if (_maxTime != null)
+            {
+                throw new NotSupportedException("Only one max time can be used for each query");
+            }
+
+            Expression expression = methodCallExpression.Arguments[1];
+            if (expression.Type != typeof(TimeSpan))
+            {
+                throw new ArgumentOutOfRangeException("methodCallExpression", "Expected an Expression of Type TimeSpan.");
+            }
+
+            var constantExpression = expression as ConstantExpression;
+            if (constantExpression == null)
+            {
+                throw new ArgumentOutOfRangeException("methodCallExpression", "Expected a ConstantExpression.");
+            }
+
+            _maxTime = (TimeSpan)constantExpression.Value;
         }
 
         private void TranslateWhere(MethodCallExpression methodCallExpression)

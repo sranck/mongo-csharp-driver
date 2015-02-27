@@ -145,5 +145,20 @@ namespace MongoDB.Driver.Linq
             var expression = Expression.Call(null, method, args);
             return query.Provider.CreateQuery<TSource>(expression);
         }
+
+        /// <summary>
+        /// Sets the maximum time the server should spend on the query that's being built.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">The query being built.</param>
+        /// <param name="maxTime">The max time.</param>
+        /// <returns>New query where the expression includes a WithMaxTime method call.</returns>
+        public static IQueryable<TSource> WithMaxTime<TSource>(this IQueryable<TSource> source, TimeSpan maxTime)
+        {
+            var method = ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource));
+            var args = new[] { source.Expression, Expression.Constant(maxTime) };
+            var expression = Expression.Call(null, method, args);
+            return source.Provider.CreateQuery<TSource>(expression);
+        }
     }
 }
