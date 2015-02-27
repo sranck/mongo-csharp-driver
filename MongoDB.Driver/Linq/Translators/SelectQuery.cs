@@ -479,6 +479,12 @@ namespace MongoDB.Driver.Linq
                 throw new NotSupportedException(message);
             }
 
+            if (_maxTime != null)
+            {
+                var message = "Distinct cannot be used together with WithMaxTime.";
+                throw new NotSupportedException(message);
+            }
+
             _distinct = _projection;
             _projection = null;
         }
@@ -973,6 +979,12 @@ namespace MongoDB.Driver.Linq
             if (_maxTime != null)
             {
                 throw new NotSupportedException("Only one max time can be used for each query");
+            }
+
+            if (_distinct != null)
+            {
+                var message = "WithMaxTime cannot be used together with Distinct.";
+                throw new NotSupportedException(message);
             }
 
             Expression expression = methodCallExpression.Arguments[1];

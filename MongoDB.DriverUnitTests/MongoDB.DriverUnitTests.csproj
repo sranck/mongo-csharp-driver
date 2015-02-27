@@ -145,6 +145,7 @@
     <Compile Include="Linq\BsonDocumentTests.cs" />
     <Compile Include="FailPoint.cs" />
     <Compile Include="Jira\CSharp900Tests.cs" />
+    <Compile Include="Linq\WithMaxTimeTests.cs" />
     <Compile Include="MongoClientSettingsTests.cs" />
     <Compile Include="MongoServerBuildInfoTests.cs" />
     <Compile Include="MongoClientTests.cs" />
